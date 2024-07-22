@@ -13,7 +13,7 @@ from random import randint
 import joblib
 
 
-path = "one_hand.csv"
+path = "data/one_hand.csv"
 seed = 13
 epocas = 500
 otimizador = "Adam"

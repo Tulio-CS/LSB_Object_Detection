@@ -1,9 +1,31 @@
-import csv
+import cv2
+import mediapipe as mp
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+from sklearn.preprocessing import LabelEncoder
+import joblib
 
-header = ['y'] + [f'Head_{i}_{axis}' for i in range(468) for axis in ['x', 'y', 'z']] + [f'Pose_{i}_{axis}' for i in range(33) for axis in ['x', 'y', 'z',"visibility"]] + [f'Hand_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']]
+# Load the pre-trained model
+model = tf.keras.models.load_model('models/holistic/model.h5')
+model.load_weights("models/holistic/ModelWeights.weights.h5")
 
-with open("teste.csv","w") as file:
-    writer = csv.writer(file)
-    writer.writerow(header)
+labels = {0:"A",1:"B",2:"C",3:"D",4:"E",5:"L",6:"I",7:"M",8:"V"}
+threshold=0.9
 
-    file.close()
+encoder = joblib.load("encoder.pkl")
+scaler = joblib.load("scaler.pkl")
+# Initialize MediaPipe hands
+mp_drawing = mp.solutions.drawing_utils
+mp_holistic = mp.solutions.holistic
+
+data = "test.csv"
+
+df = pd.read_csv(data)
+df = df.iloc[:,1:1600]
+
+df = scaler.transform(df)
+
+prediction = model.predict(df)
+predicted_class = np.argmax(prediction, axis=1)[0]
+print(predicted_class)
