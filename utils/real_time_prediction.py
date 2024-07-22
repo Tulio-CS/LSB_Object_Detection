@@ -6,8 +6,8 @@ from sklearn.preprocessing import LabelEncoder
 import joblib
 
 # Load the pre-trained model
-model = tf.keras.models.load_model('models/holistic/model.h5')
-model.load_weights("models/holistic/ModelWeights.weights.h5")
+model = tf.keras.models.load_model('model.h5')
+model.load_weights("ModelWeights.weights.h5")
 
 labels = {0:"A",1:"B",2:"C",3:"D",4:"E",5:"L",6:"I",7:"M",8:"V"}
 threshold=0.9
@@ -24,7 +24,7 @@ mp_holistic = mp.solutions.holistic
 # Open the webcam
 cap = cv2.VideoCapture(0)
 
-with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
+with mp_holistic.Holistic(min_detection_confidence=0.8, min_tracking_confidence=0.8) as holistic:
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -38,6 +38,17 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
 
         # Process the RGB image to detect hands
         results = holistic.process(rgb_frame)
+
+        mp_drawing.draw_landmarks(frame, results.face_landmarks, mp_holistic.FACEMESH_TESSELATION)
+            
+            # Right hand
+        mp_drawing.draw_landmarks(frame, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
+
+            # Left Hand
+        mp_drawing.draw_landmarks(frame, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
+
+            # Pose Detections
+        mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS)
 
         # Draw hand landmarks and predict if hand is detected
         

@@ -15,21 +15,17 @@ cap = cv2.VideoCapture(0)
 base_dir = 'C:/Users/tulio/OneDrive/Documentos/GitHub/lsb_images_2'
 os.makedirs(base_dir, exist_ok=True)
 
-one_hand_header = ['y'] + [f'Head_{i}_{axis}' for i in range(468) for axis in ['x', 'y', 'z']] + [f'Pose_{i}_{axis}' for i in range(33) for axis in ['x', 'y', 'z',"visibility"]] + [f'Hand_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']]
-both_header = ['y'] + [f'Head_{i}_{axis}' for i in range(468) for axis in ['x', 'y', 'z']] + [f'Pose_{i}_{axis}' for i in range(33) for axis in ['x', 'y', 'z',"visibility"]] + [f'Hand_1_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']] + [f'Hand_2_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']]
+#header = ['y'] + [f'Head_{i}_{axis}' for i in range(468) for axis in ['x', 'y', 'z']] + [f'Pose_{i}_{axis}' for i in range(33) for axis in ['x', 'y', 'z',"visibility"]] + [f'Hand_1_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']] + [f'Hand_2_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']]
+header = ['y'] + [f'Pose_{i}_{axis}' for i in range(33) for axis in ['x', 'y', 'z',"visibility"]] + [f'Hand_1_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']] + [f'Hand_2_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']]
 
-one_hand = 'test.csv'
-both = 'both.csv'
+path = 'holistic.csv'
 counter = 0
 last_char = ""
 
-with open(both, mode='w', newline='') as both_file, open(one_hand, mode='w', newline='') as one_hand_file:
+with open(path, mode='w', newline='') as file:
     
-    both_writer = csv.writer(both_file)
-    both_writer.writerow(both_header)
-
-    one_hand_writer = csv.writer(one_hand_file)
-    one_hand_writer.writerow(one_hand_header)
+    writer = csv.writer(file)
+    writer.writerow(header)
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
         while cap.isOpened():
             ret, frame = cap.read()
@@ -39,7 +35,7 @@ with open(both, mode='w', newline='') as both_file, open(one_hand, mode='w', new
             results = holistic.process(rgb_frame)
 
             # Draw face landmarks
-            mp_drawing.draw_landmarks(frame, results.face_landmarks, mp_holistic.FACEMESH_TESSELATION)
+            #mp_drawing.draw_landmarks(frame, results.face_landmarks, mp_holistic.FACEMESH_TESSELATION)
             
             # Right hand
             mp_drawing.draw_landmarks(frame, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
@@ -54,7 +50,7 @@ with open(both, mode='w', newline='') as both_file, open(one_hand, mode='w', new
 
             
             pose = np.array([[res.x, res.y, res.z, res.visibility] for res in results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(132)
-            face = np.array([[res.x, res.y, res.z] for res in results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(1404)
+            #face = np.array([[res.x, res.y, res.z] for res in results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(1404)
             lh = np.array([[res.x, res.y, res.z] for res in results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21*3)
             rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(21*3)
                 # Check for key press
@@ -69,15 +65,12 @@ with open(both, mode='w', newline='') as both_file, open(one_hand, mode='w', new
 
                 if key_str != last_char:
                     last_char = key_str
+                    counter = 0
                 else:
                     counter += 1
                     print(f"{key_str}  {counter}")
-                if np.all(lh == 0) and not np.all(rh == 0):
-                    one_hand_writer.writerow(np.concatenate([[key_str],face,pose,rh]))
-                elif not np.all(lh == 0) and np.all(rh == 0): 
-                    one_hand_writer.writerow(np.concatenate([[key_str],face,pose,lh]))
-                elif not np.all(lh == 0) and not np.all(rh == 0):
-                    both_writer.writerow(np.concatenate([[key_str],face,pose,lh,rh]))
+
+                writer.writerow(np.concatenate([[key_str],pose,lh,rh]))
 
                 # Display the resulting frame
             cv2.imshow('Hand Detector', frame)
