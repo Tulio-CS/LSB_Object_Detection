@@ -52,9 +52,9 @@ O projeto consiste em um classificador de Língua de Sinais Brasileira utilizand
 
 #### Referências
 
-1. Documentação do MediaPipe: [https://google.github.io/mediapipe/](https://ai.google.dev/edge/mediapipe/solutions/guide?hl=pt-br](https://google.github.io/mediapipe/)
+1. Documentação do MediaPipe: [https://google.github.io/mediapipe/](https://ai.google.dev/edge/mediapipe/solutions/guide?hl=pt-br)
 2. Documentação do TensorFlow: [https://www.tensorflow.org/api_docs](https://www.tensorflow.org/api_docs)
-3. Documentação do OpenCV: [https://docs.opencv.org/](https://docs.opencv.org/)]
+3. Documentação do OpenCV: [https://docs.opencv.org/](https://docs.opencv.org/)
 4. Documentação do SciKitLearn: [https://scikit-learn.org/stable/](https://scikit-learn.org/stable/)
 5. Documentação do Numpy: [https://numpy.org/doc/](https://numpy.org/doc/)
 6. Documentação Pandas: [https://pandas.pydata.org/docs/](https://pandas.pydata.org/docs/)
@@ -116,9 +116,9 @@ The project consists of a Brazilian Sign Language classifier using the MediaPipe
 
 #### References
 
-1. MediaPipe Documentation: [https://google.github.io/mediapipe/](https://ai.google.dev/edge/mediapipe/solutions/guide?hl=pt-br](https://google.github.io/mediapipe/)
+1. MediaPipe Documentation: [https://google.github.io/mediapipe/](https://ai.google.dev/edge/mediapipe/solutions/guide?hl=pt-br)
 2. TensorFlow Documentation: [https://www.tensorflow.org/api_docs](https://www.tensorflow.org/api_docs)
-3. OpenCV Documentation: [https://docs.opencv.org/](https://docs.opencv.org/)]
+3. OpenCV Documentation: [https://docs.opencv.org/](https://docs.opencv.org/)
 4. SciKitLearn Documentation: [https://scikit-learn.org/stable/](https://scikit-learn.org/stable/)
 5. Numpy Documentation: [https://numpy.org/doc/](https://numpy.org/doc/)
 6. Pandas Documentation: [https://pandas.pydata.org/docs/](https://pandas.pydata.org/docs/)
