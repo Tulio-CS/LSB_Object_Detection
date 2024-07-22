@@ -16,7 +16,7 @@ base_dir = 'C:/Users/tulio/OneDrive/Documentos/GitHub/lsb_images_2'
 os.makedirs(base_dir, exist_ok=True)
 
 #header = ['y'] + [f'Head_{i}_{axis}' for i in range(468) for axis in ['x', 'y', 'z']] + [f'Pose_{i}_{axis}' for i in range(33) for axis in ['x', 'y', 'z',"visibility"]] + [f'Hand_1_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']] + [f'Hand_2_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']]
-header = ['y'] + [f'Pose_{i}_{axis}' for i in range(33) for axis in ['x', 'y', 'z',"visibility"]] + [f'Hand_1_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']] + [f'Hand_2_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']]
+header = ['y'] + [f'Pose_{i}_{axis}' for i in range(33) for axis in ['x', 'y', 'z',"visibility"]] + [f'Hand_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']]
 
 path = 'holistic.csv'
 counter = 0

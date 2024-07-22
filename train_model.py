@@ -13,7 +13,7 @@ from random import randint
 import joblib
 
 
-path = "data/One_Hand.csv"
+path = "holistic.csv"
 seed = 13
 epocas = 500
 otimizador = "Adam"
@@ -21,21 +21,22 @@ otimizador = "Adam"
 #Crir o dataframe
 data_frame = pd.read_csv(path,sep=",",decimal=".")
 
+print(data_frame.describe)
 
 labels = data_frame["y"].unique()                             #Colhendo os diferentes labels do data frame
 encoder = LabelEncoder()                                                 #Criando o codificador
 encoder.fit(labels)                                                      #Ajustando o codificador
 data_frame["target"] = encoder.transform(data_frame["y"])      #Criando uma nova coluna no data frame
 
-print(data_frame.describe)
+
 joblib.dump(encoder,"encoder.pkl")
 
 
 
 #Ajustando o data frame
 scaler = StandardScaler()           #Criando o scaler
-scaler.fit(data_frame.iloc[:,1:64])
-data_frame.iloc[:,1:64] = pd.DataFrame(scaler.fit_transform(data_frame.iloc[:,1:64]))           #Normalizando os valores
+scaler.fit(data_frame.iloc[:,1:196])
+data_frame.iloc[:,1:196] = pd.DataFrame(scaler.fit_transform(data_frame.iloc[:,1:196]))           #Normalizando os valores
 
 joblib.dump(scaler,"scaler.pkl")
 
@@ -50,12 +51,14 @@ valid = data_frame.sample(frac=0.5,random_state=seed)         #Separando 50% dos
 data_frame = data_frame.drop(valid.index)                     #Removendo os valores de validacao do data frame
 test = data_frame.sample(frac=1,random_state=seed)            #Separando o resto dos valores para o teste
 
-X_train = train.iloc[:,1:64]                 
-y_train = train.iloc[:,64]
-X_valid = valid.iloc[:,1:64]
-y_valid = valid.iloc[:,64]
-X_test = test.iloc[:,1:64]
-y_test = test.iloc[:,64]
+X_train = train.iloc[:,1:196]                 
+y_train = train.iloc[:,196]
+X_valid = valid.iloc[:,1:196]
+y_valid = valid.iloc[:,196]
+X_test = test.iloc[:,1:196]
+y_test = test.iloc[:,196]
+
+print(X_train.head)
 
 
 #Criando o modelo
@@ -64,13 +67,13 @@ tf.random.set_seed(seed)
 
 model = models.Sequential()
 
-model.add(layers.Dense(63,activation="relu",input_dim = 63))
+model.add(layers.Dense(195,activation="relu",input_dim = 195))
 
 model.add(layers.Dense(26,activation="relu"))
 model.add(layers.Dense(39,activation="relu"))
 model.add(layers.Dense(26,activation="relu"))
 
-model.add(layers.Dense(13,activation="softmax"))
+model.add(layers.Dense(4,activation="softmax"))
 
 #Otimizador
 model.compile(loss='sparse_categorical_crossentropy', optimizer=otimizador, metrics=['accuracy'])
