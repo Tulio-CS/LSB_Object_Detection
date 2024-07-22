@@ -15,30 +15,33 @@ cap = cv2.VideoCapture(0)
 base_dir = 'C:/Users/tulio/OneDrive/Documentos/GitHub/lsb_images_2'
 os.makedirs(base_dir, exist_ok=True)
 
-csv_file = 'dataset.csv'
+one_hand = 'one_hand.csv'
+both = 'both.csv'
 counter = 0
 last_char = ""
-with open(csv_file, mode='w', newline='') as file:
-    writer = csv.writer(file)
+
+with open(both, mode='w', newline='') as both_file, open(one_hand, mode='w', newline='') as one_hand_file:
+    both_writer = csv.writer(both_file)
+    one_hand_writer = csv.writer(one_hand_file)
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
         while cap.isOpened():
             ret, frame = cap.read()
             frame = cv2.flip(frame, 1)
-            image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-            results = holistic.process(image)
+            results = holistic.process(rgb_frame)
 
             # Draw face landmarks
-            mp_drawing.draw_landmarks(image, results.face_landmarks, mp_holistic.FACEMESH_TESSELATION)
+            mp_drawing.draw_landmarks(frame, results.face_landmarks, mp_holistic.FACEMESH_TESSELATION)
             
             # Right hand
-            mp_drawing.draw_landmarks(image, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
+            mp_drawing.draw_landmarks(frame, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
 
             # Left Hand
-            mp_drawing.draw_landmarks(image, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
+            mp_drawing.draw_landmarks(frame, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
 
             # Pose Detections
-            mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS)
+            mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS)
                             
             
 
@@ -47,7 +50,6 @@ with open(csv_file, mode='w', newline='') as file:
             face = np.array([[res.x, res.y, res.z] for res in results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(1404)
             lh = np.array([[res.x, res.y, res.z] for res in results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21*3)
             rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(21*3)
-
                 # Check for key press
             key = cv2.waitKey(1) & 0xFF
 
@@ -63,7 +65,12 @@ with open(csv_file, mode='w', newline='') as file:
                 else:
                     counter += 1
                     print(f"{key_str}  {counter}")
-                writer.writerow(np.concatenate([[key_str],face,pose,lh,rh]))
+                if np.all(lh == 0) and not np.all(rh == 0):
+                    one_hand_writer.writerow(np.concatenate([[key_str],face,pose,rh]))
+                elif not np.all(lh == 0) and np.all(rh == 0): 
+                    one_hand_writer.writerow(np.concatenate([[key_str],face,pose,lh]))
+                elif not np.all(lh == 0) and not np.all(rh == 0):
+                    both_writer.writerow(np.concatenate([[key_str],face,pose,lh,rh]))
 
                 # Display the resulting frame
             cv2.imshow('Hand Detector', frame)
