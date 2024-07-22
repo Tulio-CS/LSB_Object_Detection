@@ -1,5 +1,4 @@
 import seaborn as sn
-from keras.models import load_model
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,7 +6,7 @@ import joblib
 import pandas as pd
 
 #Variaveis
-data_path = "points.csv"     #Caminho do dataset
+data_path = "one_hand.csv"     #Caminho do dataset
 seed = 13
 
 
@@ -22,11 +21,10 @@ pred_ds = data_frame.sample(frac=0.5,random_state=seed)
 
 encoder = joblib.load("encoder.pkl")
 pred_ds["target"] = encoder.transform(pred_ds["y"])
-
 scaler = joblib.load("scaler.pkl")
-pred_ds.iloc[:,1:64] = pd.DataFrame(scaler.transform(pred_ds.iloc[:,1:64]))
+pred_ds.iloc[:,1:1600] = pd.DataFrame(scaler.transform(pred_ds.iloc[:,1:1600]))
 
-y_pred = model.predict(pred_ds.iloc[:,1:64])
+y_pred = model.predict(pred_ds.iloc[:,1:1600])
 
 truth = pred_ds["target"]
 

@@ -10,11 +10,10 @@ from sklearn.preprocessing import LabelEncoder,StandardScaler
 from tkinter.filedialog import askopenfile
 import seaborn as sn
 from random import randint
-import keras.callbacks as tfc
 import joblib
 
 
-path = "dataset.csv"
+path = "data/One_Hand.csv"
 seed = 13
 epocas = 500
 otimizador = "Adam"
@@ -28,6 +27,7 @@ encoder = LabelEncoder()                                                 #Criand
 encoder.fit(labels)                                                      #Ajustando o codificador
 data_frame["target"] = encoder.transform(data_frame["y"])      #Criando uma nova coluna no data frame
 
+print(data_frame.describe)
 joblib.dump(encoder,"encoder.pkl")
 
 
@@ -79,12 +79,12 @@ model.compile(loss='sparse_categorical_crossentropy', optimizer=otimizador, metr
 
 
 #Criando o checkpoint, para salvar os melhores pesos
-callback = tfc.ModelCheckpoint("best.keras",save_best_only=True)
+callback = callbacks.ModelCheckpoint("best.keras",save_best_only=True)
 
-reduce_lr_callback = tfc.ReduceLROnPlateau(monitor='accuracy', factor=0.2, patience=3, min_lr=1e-6)
+reduce_lr_callback = callbacks.ReduceLROnPlateau(monitor='accuracy', factor=0.2, patience=3, min_lr=1e-6)
 
 #Criando uma condicao para que a rede pare de treinar se nao houver melhoras, ajuda a evitar overfitting
-early_stopping_callback = tfc.EarlyStopping(monitor="accuracy",patience=10,restore_best_weights=True)         
+early_stopping_callback = callbacks.EarlyStopping(monitor="accuracy",patience=10,restore_best_weights=True)         
 
 
 #Treinamento

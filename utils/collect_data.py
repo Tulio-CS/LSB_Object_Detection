@@ -15,14 +15,21 @@ cap = cv2.VideoCapture(0)
 base_dir = 'C:/Users/tulio/OneDrive/Documentos/GitHub/lsb_images_2'
 os.makedirs(base_dir, exist_ok=True)
 
+one_hand_header = ['y'] + [f'Head_{i}_{axis}' for i in range(468) for axis in ['x', 'y', 'z']] + [f'Pose_{i}_{axis}' for i in range(33) for axis in ['x', 'y', 'z',"visibility"]] + [f'Hand_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']]
+both_header = ['y'] + [f'Head_{i}_{axis}' for i in range(468) for axis in ['x', 'y', 'z']] + [f'Pose_{i}_{axis}' for i in range(33) for axis in ['x', 'y', 'z',"visibility"]] + [f'Hand_1_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']] + [f'Hand_2_{i}_{axis}' for i in range(21) for axis in ['x', 'y', 'z']]
+
 one_hand = 'one_hand.csv'
 both = 'both.csv'
 counter = 0
 last_char = ""
 
 with open(both, mode='w', newline='') as both_file, open(one_hand, mode='w', newline='') as one_hand_file:
+    
     both_writer = csv.writer(both_file)
+    both_writer.writerow(both_header)
+
     one_hand_writer = csv.writer(one_hand_file)
+    one_hand_writer.writerow(one_hand_header)
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
         while cap.isOpened():
             ret, frame = cap.read()

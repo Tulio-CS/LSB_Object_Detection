@@ -3,18 +3,17 @@
 
 #importar as bibliotecas
 import tensorflow as tf
-from keras import layers, models, callbacks
+from keras import layers, models,callbacks
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder,StandardScaler
 from tkinter.filedialog import askopenfile
 import seaborn as sn
 from random import randint
-import keras.callbacks as tfc
 import joblib
 
 
-path = "dataset.csv"
+path = "one_hand.csv"
 seed = 13
 epocas = 500
 otimizador = "Adam"
@@ -23,10 +22,14 @@ otimizador = "Adam"
 data_frame = pd.read_csv(path,sep=",",decimal=".")
 
 
+
+
+
 labels = data_frame["y"].unique()                             #Colhendo os diferentes labels do data frame
-encoder = LabelEncoder()                                                 #Criando o codificador
-encoder.fit(labels)                                                      #Ajustando o codificador
+encoder = LabelEncoder()                                      #Criando o codificador
+encoder.fit(labels)                                           #Ajustando o codificador
 data_frame["target"] = encoder.transform(data_frame["y"])      #Criando uma nova coluna no data frame
+
 
 joblib.dump(encoder,"encoder.pkl")
 
@@ -34,8 +37,8 @@ joblib.dump(encoder,"encoder.pkl")
 
 #Ajustando o data frame
 scaler = StandardScaler()           #Criando o scaler
-scaler.fit(data_frame.iloc[:,1:64])
-data_frame.iloc[:,1:64] = pd.DataFrame(scaler.fit_transform(data_frame.iloc[:,1:64]))           #Normalizando os valores
+scaler.fit(data_frame.iloc[:,1:1600])
+data_frame.iloc[:,1:1600] = pd.DataFrame(scaler.fit_transform(data_frame.iloc[:,1:1600]))           #Normalizando os valores
 
 joblib.dump(scaler,"scaler.pkl")
 
@@ -50,13 +53,14 @@ valid = data_frame.sample(frac=0.5,random_state=seed)         #Separando 50% dos
 data_frame = data_frame.drop(valid.index)                     #Removendo os valores de validacao do data frame
 test = data_frame.sample(frac=1,random_state=seed)            #Separando o resto dos valores para o teste
 
-X_train = train.iloc[:,1:64]                 
-y_train = train.iloc[:,64]
-X_valid = valid.iloc[:,1:64]
-y_valid = valid.iloc[:,64]
-X_test = test.iloc[:,1:64]
-y_test = test.iloc[:,64]
 
+
+X_train = train.iloc[:,1:1600]                 
+y_train = train.iloc[:,1600]
+X_valid = valid.iloc[:,1:1600]
+y_valid = valid.iloc[:,1600]
+X_test = test.iloc[:,1:1600]
+y_test = test.iloc[:,1600]
 
 #Criando o modelo
 
@@ -64,13 +68,13 @@ tf.random.set_seed(seed)
 
 model = models.Sequential()
 
-model.add(layers.Dense(63,activation="relu",input_dim = 63))
+model.add(layers.Dense(1599,activation="relu",input_dim = 1599))
 
 model.add(layers.Dense(26,activation="relu"))
 model.add(layers.Dense(39,activation="relu"))
 model.add(layers.Dense(26,activation="relu"))
 
-model.add(layers.Dense(13,activation="softmax"))
+model.add(layers.Dense(9,activation="softmax"))
 
 #Otimizador
 model.compile(loss='sparse_categorical_crossentropy', optimizer=otimizador, metrics=['accuracy'])
@@ -79,12 +83,12 @@ model.compile(loss='sparse_categorical_crossentropy', optimizer=otimizador, metr
 
 
 #Criando o checkpoint, para salvar os melhores pesos
-callback = tfc.ModelCheckpoint("best.keras",save_best_only=True)
+callback = callbacks.ModelCheckpoint("best.keras",save_best_only=True)
 
-reduce_lr_callback = tfc.ReduceLROnPlateau(monitor='accuracy', factor=0.2, patience=3, min_lr=1e-6)
+reduce_lr_callback = callbacks.ReduceLROnPlateau(monitor='accuracy', factor=0.2, patience=3, min_lr=1e-6)
 
 #Criando uma condicao para que a rede pare de treinar se nao houver melhoras, ajuda a evitar overfitting
-early_stopping_callback = tfc.EarlyStopping(monitor="accuracy",patience=10,restore_best_weights=True)         
+early_stopping_callback = callbacks.EarlyStopping(monitor="accuracy",patience=10,restore_best_weights=True)         
 
 
 #Treinamento
