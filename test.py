@@ -7,8 +7,8 @@ from sklearn.preprocessing import LabelEncoder
 import joblib
 
 # Load the pre-trained model
-model = tf.keras.models.load_model('models/holistic/model.h5')
-model.load_weights("models/holistic/ModelWeights.weights.h5")
+model = tf.keras.models.load_model('model.h5')
+model.load_weights("ModelWeights.weights.h5")
 
 labels = {0:"A",1:"B",2:"C",3:"D",4:"E",5:"L",6:"I",7:"M",8:"V"}
 threshold=0.9

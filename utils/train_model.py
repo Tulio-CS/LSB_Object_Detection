@@ -70,9 +70,9 @@ model = models.Sequential()
 
 model.add(layers.Dense(1599,activation="relu",input_dim = 1599))
 
-model.add(layers.Dense(26,activation="relu"))
-model.add(layers.Dense(39,activation="relu"))
-model.add(layers.Dense(26,activation="relu"))
+model.add(layers.Dense(100,activation="relu"))
+model.add(layers.Dense(200,activation="relu"))
+model.add(layers.Dense(50,activation="relu"))
 
 model.add(layers.Dense(9,activation="softmax"))
 
