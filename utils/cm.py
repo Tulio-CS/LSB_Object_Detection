@@ -6,7 +6,7 @@ import joblib
 import pandas as pd
 
 #Variaveis
-data_path = "one_hand.csv"     #Caminho do dataset
+data_path = "holistic.csv"     #Caminho do dataset
 seed = 13
 
 
@@ -22,9 +22,9 @@ pred_ds = data_frame.sample(frac=0.5,random_state=seed)
 encoder = joblib.load("encoder.pkl")
 pred_ds["target"] = encoder.transform(pred_ds["y"])
 scaler = joblib.load("scaler.pkl")
-pred_ds.iloc[:,1:1600] = pd.DataFrame(scaler.transform(pred_ds.iloc[:,1:1600]))
+pred_ds.iloc[:,1:259] = pd.DataFrame(scaler.transform(pred_ds.iloc[:,1:259]))
 
-y_pred = model.predict(pred_ds.iloc[:,1:1600])
+y_pred = model.predict(pred_ds.iloc[:,1:259])
 
 truth = pred_ds["target"]
 

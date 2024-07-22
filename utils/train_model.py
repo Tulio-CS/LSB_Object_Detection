@@ -13,7 +13,7 @@ from random import randint
 import joblib
 
 
-path = "data/one_hand.csv"
+path = "holistic.csv"
 seed = 13
 epocas = 500
 otimizador = "Adam"
@@ -37,8 +37,8 @@ joblib.dump(encoder,"encoder.pkl")
 
 #Ajustando o data frame
 scaler = StandardScaler()           #Criando o scaler
-scaler.fit(data_frame.iloc[:,1:1600])
-data_frame.iloc[:,1:1600] = pd.DataFrame(scaler.fit_transform(data_frame.iloc[:,1:1600]))           #Normalizando os valores
+scaler.fit(data_frame.iloc[:,1:259])
+data_frame.iloc[:,1:259] = pd.DataFrame(scaler.fit_transform(data_frame.iloc[:,1:259]))           #Normalizando os valores
 
 joblib.dump(scaler,"scaler.pkl")
 
@@ -55,12 +55,15 @@ test = data_frame.sample(frac=1,random_state=seed)            #Separando o resto
 
 
 
-X_train = train.iloc[:,1:1600]                 
-y_train = train.iloc[:,1600]
-X_valid = valid.iloc[:,1:1600]
-y_valid = valid.iloc[:,1600]
-X_test = test.iloc[:,1:1600]
-y_test = test.iloc[:,1600]
+X_train = train.iloc[:,1:259]                 
+y_train = train.iloc[:,259]
+X_valid = valid.iloc[:,1:259]
+y_valid = valid.iloc[:,259]
+X_test = test.iloc[:,1:259]
+y_test = test.iloc[:,259]
+
+
+print(y_train.head)
 
 #Criando o modelo
 
@@ -68,11 +71,11 @@ tf.random.set_seed(seed)
 
 model = models.Sequential()
 
-model.add(layers.Dense(1599,activation="relu",input_dim = 1599))
+model.add(layers.Dense(258,activation="relu",input_dim = 258))
 
-model.add(layers.Dense(100,activation="relu"))
 model.add(layers.Dense(200,activation="relu"))
-model.add(layers.Dense(50,activation="relu"))
+model.add(layers.Dense(100,activation="relu"))
+
 
 model.add(layers.Dense(9,activation="softmax"))
 
