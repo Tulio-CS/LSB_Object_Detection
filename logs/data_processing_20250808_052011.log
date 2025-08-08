@@ -1,0 +1,16 @@
+2025-08-08 05:20:11,918 - LibrasDataProcessor - INFO - Iniciando carregamento dos dados...
+2025-08-08 05:20:11,919 - LibrasDataProcessor - INFO - Classes de gestos detectadas: ['a' 'b' 'c' 'd' 'e' 'j']
+2025-08-08 05:20:11,926 - LibrasDataProcessor - INFO - Carregados 30 arquivos para a classe 'a'
+2025-08-08 05:20:11,932 - LibrasDataProcessor - INFO - Carregados 30 arquivos para a classe 'b'
+2025-08-08 05:20:11,938 - LibrasDataProcessor - INFO - Carregados 30 arquivos para a classe 'c'
+2025-08-08 05:20:11,943 - LibrasDataProcessor - INFO - Carregados 30 arquivos para a classe 'd'
+2025-08-08 05:20:11,950 - LibrasDataProcessor - INFO - Carregados 30 arquivos para a classe 'e'
+2025-08-08 05:20:11,956 - LibrasDataProcessor - INFO - Carregados 31 arquivos para a classe 'j'
+2025-08-08 05:20:11,957 - LibrasDataProcessor - INFO - Shape total dos dados (X): (181, 30, 126)
+2025-08-08 05:20:11,957 - LibrasDataProcessor - INFO - Shape total dos rótulos (y): (181, 6)
+2025-08-08 05:20:11,957 - LibrasDataProcessor - INFO - Aplicando pré-processamento aos dados...
+2025-08-08 05:20:11,963 - LibrasDataProcessor - INFO - Pré-processamento concluído
+2025-08-08 05:20:11,963 - LibrasDataProcessor - INFO - Dividindo dados em conjuntos de treino, validação e teste...
+2025-08-08 05:20:11,967 - LibrasDataProcessor - INFO - Dados de treinamento: (108, 30, 126)
+2025-08-08 05:20:11,967 - LibrasDataProcessor - INFO - Dados de validação: (36, 30, 126)
+2025-08-08 05:20:11,967 - LibrasDataProcessor - INFO - Dados de teste: (37, 30, 126)
