@@ -284,6 +284,36 @@ def eval_and_plots(model, X_test, y_test, actions, outdir):
     ConfusionMatrixDisplay(cmn, display_labels=actions).plot(ax=ax, xticks_rotation=45, colorbar=False, values_format=".2f")
     ax.set_title("Matriz de confusão (norm)")
     plt.tight_layout(); plt.savefig(os.path.join(outdir, "confusion_norm.png")); plt.close()
+    import seaborn as sns
+
+    # Confusão normalizada - Heatmap
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(
+        cmn, annot=True, fmt=".2f", cmap="Blues",
+        xticklabels=actions, yticklabels=actions,
+        cbar=True
+    )
+    plt.xlabel("Predito")
+    plt.ylabel("Real")
+    plt.title("Matriz de Confusão (Normalizada)")
+    plt.tight_layout()
+    plt.savefig(os.path.join(outdir, "confusion_heatmap.png"))
+    plt.close()
+
+    # Confusão absoluta - Heatmap
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(
+        cm, annot=True, fmt="d", cmap="Reds",
+        xticklabels=actions, yticklabels=actions,
+        cbar=True
+    )
+    plt.xlabel("Predito")
+    plt.ylabel("Real")
+    plt.title("Matriz de Confusão (Absoluta)")
+    plt.tight_layout()
+    plt.savefig(os.path.join(outdir, "confusion_heatmap_abs.png"))
+    plt.close()
+
 
     # PR macro
     Yb = label_binarize(y_true, classes=range(len(actions)))

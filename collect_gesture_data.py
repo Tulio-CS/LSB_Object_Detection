@@ -15,9 +15,9 @@ hands = mp_hands.Hands(
 )
 
 DATA_DIR = 'libras_data'
-SIGN_NAME = 'e' # Este será o nome do gesto
+SIGN_NAME = 'nao' # Este será o nome do gesto
 NUM_SEQUENCES = 30
-SEQUENCE_LENGTH = 30
+SEQUENCE_LENGTH = 15
 
 os.makedirs(os.path.join(DATA_DIR, SIGN_NAME), exist_ok=True)
 

@@ -26,12 +26,12 @@ from tensorflow.keras.models import load_model
 import mediapipe as mp
 
 # ----------------- Config -----------------
-MODEL_PATHS = ["results_v3/best_model.keras", "libras_recognition_model_v2.keras"]
+MODEL_PATHS = ["best_model.keras", "libras_recognition_model_v2.keras"]
 ACTIONS_PATH = "libras_actions.npy"
 NORM_STATS_PATH = "results_v3/norm_stats.json"
 
 CAM_INDEX = 0
-CONF_THRESH = 0.40           # confiança mínima para aceitar a predição
+CONF_THRESH = 0.30           # confiança mínima para aceitar a predição
 EMA_ALPHA = 0.6              # suavização exponencial das probabilidades
 MAJORITY_K = 8               # janelas recentes para majority vote
 FONT = cv2.FONT_HERSHEY_SIMPLEX
@@ -164,7 +164,8 @@ def main():
             if not ok:
                 print("[WARN] Frame perdido.")
                 break
-
+            
+            frame = cv2.flip(frame, 1)
             # BGR->RGB
             img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             img.flags.writeable = False
