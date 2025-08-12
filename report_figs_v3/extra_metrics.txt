@@ -1,0 +1,5 @@
+Cohen's kappa: 0.988045
+Matthews corrcoef (MCC): 0.988060
+Top-1 accuracy: 0.988403
+Top-3 accuracy: 0.998216
+Expected Calibration Error (ECE, 10 bins): 0.029820

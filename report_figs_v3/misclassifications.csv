@@ -1,0 +1,14 @@
+file,true,pred,confidence
+libras_data\c\c-142b42f3-5fb9-41d0-ab32-99741bc75d88.npy,c,b,0.7874
+libras_data\c\c-6af657f2-4e83-4afe-9036-9bd8d2218136.npy,c,b,0.8409
+libras_data\sim\sim-fd6bcac1-278f-4c1d-959a-f43a8bf7fece.npy,sim,ajuda,0.6897
+libras_data\u\u-20434962-b58d-499e-9d53-e6dfaae02794.npy,u,v,0.5617
+libras_data\u\u-53562911-63c6-4526-bb72-021dd5e07d5f.npy,u,r,0.6515
+libras_data\u\u-b9002894-1d73-4c03-aa5c-8898049c51bc.npy,u,v,0.5561
+libras_data\v\v-02c722d5-0f8f-49e9-b58a-d7e0109649b5.npy,v,u,0.4909
+libras_data\v\v-3fea0463-90ed-41ec-b3a3-fec73cf17698.npy,v,u,0.5305
+libras_data\v\v-54f1c264-caa2-4645-bbcd-20b17d1b5a3a.npy,v,u,0.5348
+libras_data\v\v-6e35e038-ca93-41dd-a9f2-f97085a4295a.npy,v,u,0.6179
+libras_data\v\v-79fa6127-ab6f-4724-88cd-9d2b95a3c72b.npy,v,u,0.4916
+libras_data\v\v-987287bb-9383-4795-a14b-dcfa4af8996e.npy,v,u,0.4949
+libras_data\x\x-67b5f99e-6f6f-435f-9043-79f35e685a23.npy,x,voce,0.9260
