@@ -15,7 +15,7 @@ hands = mp_hands.Hands(
 )
 
 DATA_DIR = 'libras_data'
-SIGN_NAME = 'nao' # Este será o nome do gesto
+SIGN_NAME = 'Vontade' # Este será o nome do gesto
 NUM_SEQUENCES = 30
 SEQUENCE_LENGTH = 15
 

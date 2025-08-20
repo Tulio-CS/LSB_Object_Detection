@@ -1,0 +1,11 @@
+file,true,pred,confidence
+dataset\Acontecer\Acontecer-3752357c-085f-4335-ab1c-d6ef07e23c60.npy,Acontecer,Maca,0.7847
+dataset\Barulho\Barulho-785bab12-3acd-4ab6-8700-09e31d1fab33.npy,Barulho,Maca,0.9232
+dataset\Conhecer\Conhecer-013d1125-6d8c-48ab-b9a2-a5d6504dc05e.npy,Conhecer,Maca,0.4495
+dataset\Conhecer\Conhecer-e5aedb80-9d3b-45bf-9305-dc7d14a66fea.npy,Conhecer,Maca,0.4856
+dataset\Medo\Medi-02ea4a62-70a9-46c3-af23-8ae71970ceb2.npy,Medo,Banco,0.3015
+dataset\Vacina\Vacina-0b5f74f3-5d01-438e-8b83-323d3b3b90fb.npy,Vacina,eu,0.9562
+dataset\ajuda\ajuda-129208ff-8fbd-4faf-9942-506c0f86f33c.npy,ajuda,Maca,0.2927
+dataset\o\o-232817b4-c1ac-4d15-9740-fc3fabd8983f.npy,o,c,0.4925
+dataset\sim\sim-67ee729e-4671-4cc8-b321-ff83519c70c0.npy,sim,a,0.8771
+dataset\t\t-b14fe652-29c1-46c1-a48a-a90f9a3e115b.npy,t,w,0.5741

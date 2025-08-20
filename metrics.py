@@ -204,11 +204,11 @@ def plot_pr_curves(y_true, probs, actions, outpath):
 # ========================= Main =========================
 def main():
     parser = argparse.ArgumentParser(description="Métricas/visualizações (v3).")
-    parser.add_argument("--data_dir", default="libras_data", help="Pasta com subpastas por classe (*.npy).")
+    parser.add_argument("--data_dir", default="dataset", help="Pasta com subpastas por classe (*.npy).")
     parser.add_argument("--model",    default="best_model.keras")
     parser.add_argument("--actions",  default="libras_actions.npy")
-    parser.add_argument("--norm",     default=os.path.join("results_v3","norm_stats.json"))
-    parser.add_argument("--outdir",   default="report_figs_v3")
+    parser.add_argument("--norm",     default=os.path.join("results_v4","norm_stats.json"))
+    parser.add_argument("--outdir",   default="report_figs_v4")
     args = parser.parse_args()
 
     # Artefatos

@@ -5,7 +5,7 @@ LIBRAS landmarks -> BiLSTM com anti-overfitting + alinhamento de features
 - feature_mode: 'absolute' ou 'wrist_centered'  (use 'wrist_centered' p/ bater com o infer_live.py)
 - tf.data com augmentations: jitter, rotate, scale, time-crop, time-mask, temporal-dropout
 - AdamW + label smoothing + ReduceLROnPlateau + EarlyStopping
-- Salva: best_model.keras, libras_actions.npy, results_v3/* (plots, conf mats, norm_stats.json)
+- Salva: best_model.keras, libras_actions.npy, results_v4/* (plots, conf mats, norm_stats.json, metrics_*)
 """
 
 import os, json, random, sys
@@ -16,19 +16,22 @@ import matplotlib.pyplot as plt
 from glob import glob
 from collections import defaultdict
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, classification_report
+from sklearn.metrics import (
+    confusion_matrix, ConfusionMatrixDisplay, classification_report,
+    precision_recall_curve, average_precision_score,
+    accuracy_score, precision_score, recall_score, f1_score
+)
 from sklearn.preprocessing import label_binarize
-from sklearn.metrics import precision_recall_curve, average_precision_score
 
 # --------------------- CONFIG ---------------------
-DATA_DIR         = "libras_data"
-RESULTS_DIR      = "results_v3"
+DATA_DIR         = "dataset"
+RESULTS_DIR      = "results_v4"
 MODEL_OUT        = "best_model.keras"
 ACTIONS_OUT      = "libras_actions.npy"
-SEED             = 42
+SEED             = 40
 TEST_SIZE        = 0.2
 BATCH_SIZE       = 32
-EPOCHS           = 120
+EPOCHS           = 500
 INIT_LR          = 3e-4
 WEIGHT_DECAY     = 1e-4
 LABEL_SMOOTH     = 0.05
@@ -40,6 +43,7 @@ JITTER_STD       = 0.01               # ruído gaussiano
 TIME_MASK_RATIO  = 0.1                # fração de timesteps mascarados
 TEMP_DROPOUT_P   = 0.05               # prob. de zerar um timestep
 SAVE_HISTORY_PNG = True
+N_BOOTSTRAP      = 1000               # nº de reamostragens p/ erro = desvio-padrão
 
 os.makedirs(RESULTS_DIR, exist_ok=True)
 np.random.seed(SEED); tf.random.set_seed(SEED); random.seed(SEED)
@@ -59,31 +63,27 @@ def load_sequences(data_dir):
                 arr = np.load(fp)  # (T, F)
                 X.append(arr)
                 y.append(ci)
-                # grupo: prefixo do nome do arquivo antes do primeiro "_"
                 base = os.path.splitext(os.path.basename(fp))[0]
                 group = base.split("_")[0] if "_" in base else base
                 meta.append({"path": fp, "class": act, "group": group})
             except Exception as e:
                 print(f"[WARN] {fp}: {e}")
-    X = np.array(X, dtype=object)  # mantemos variável T
+    X = np.array(X, dtype=object)  # mantemos T variável
     y = np.array(y, dtype=int)
     return X, y, actions, meta
 
 def pad_or_crop_to_T(x, T):
-    # pad/crop temporal no centro
     t = x.shape[0]
     if t == T:
         return x
     if t > T:
         start = (t - T) // 2
         return x[start:start+T]
-    # pad
     pad_len = T - t
     pad = np.zeros((pad_len, x.shape[1]), dtype=x.dtype)
     return np.concatenate([x, pad], axis=0)
 
 def infer_TF_from_first(X):
-    # infere T e F do primeiro exemplo
     x0 = X[0]
     return x0.shape[0], x0.shape[1]
 
@@ -95,15 +95,14 @@ def to_wrist_centered(x):
     """
     F = x.shape[1]
     if F not in (63, 126):
-        return x  # desconhecido
+        return x
     if F == 63:
         pts = x.reshape(x.shape[0], 21, 3)
-        wrist = pts[:, 0:1, :]             # (T,1,3)
+        wrist = pts[:, 0:1, :]
         pts = pts - wrist
         return pts.reshape(x.shape[0], -1)
     else:
         pts = x.reshape(x.shape[0], 42, 3)
-        # assume mão direita 0..20 e esquerda 21..41
         wrist_r = pts[:, 0:1, :]
         wrist_l = pts[:, 21:22, :]
         pts[:, 0:21, :]  = pts[:, 0:21, :]  - wrist_r
@@ -121,20 +120,17 @@ def group_stratified_split(X, y, meta, test_size=0.2, seed=42):
     Mantém proporção por classe e tenta separar grupos (pessoa/sessão).
     Estratégia simples: sorteia grupos até atingir ~test_size.
     """
-    # agrupa por (classe, grupo)
     by_group = defaultdict(list)
     for i, m in enumerate(meta):
         key = (y[i], m["group"])
         by_group[key].append(i)
 
-    # coleta grupos por classe
     groups_by_class = defaultdict(list)
     for (cls, grp), idxs in by_group.items():
         groups_by_class[cls].append((grp, idxs))
 
     rng = np.random.RandomState(seed)
-    test_idx = []
-    train_idx = []
+    test_idx, train_idx = [], []
 
     for cls, grp_list in groups_by_class.items():
         rng.shuffle(grp_list)
@@ -157,8 +153,6 @@ def group_stratified_split(X, y, meta, test_size=0.2, seed=42):
 
 # ------------- tf.data + AUGMENT -----------------
 def make_dataset(X, y, T_fixed, mu, sd, batch, training, feature_mode):
-    """Cria tf.data a partir de listas de np.arrays (durações variáveis)."""
-
     # prepara arrays já pad/crop + feature_mode
     X2 = []
     for xi in X:
@@ -176,10 +170,7 @@ def make_dataset(X, y, T_fixed, mu, sd, batch, training, feature_mode):
         ds = ds.shuffle(len(X2), seed=SEED, reshuffle_each_iteration=True)
 
         def aug_fn(x, y):
-            # x: (T, F), assumimos F múltiplo de 3
             T = tf.shape(x)[0]; F = tf.shape(x)[1]
-
-            # reshape para (T, P, 3)
             P = F // 3
             x3 = tf.reshape(x, (T, P, 3))
 
@@ -189,8 +180,8 @@ def make_dataset(X, y, T_fixed, mu, sd, batch, training, feature_mode):
             # rotate (x,y)
             theta = tf.random.uniform([], minval=-np.deg2rad(ROT_DEG), maxval=np.deg2rad(ROT_DEG))
             c, s = tf.cos(theta), tf.sin(theta)
-            rot = tf.stack([[c, -s],[s, c]])  # 2x2
-            xy = x3[..., :2]                 # (T,P,2)
+            rot = tf.stack([[c, -s],[s, c]])
+            xy = x3[..., :2]
             xy = tf.reshape(xy, (-1, 2)) @ rot
             xy = tf.reshape(xy, (T, P, 2))
             x3 = tf.concat([xy, x3[..., 2:3]], axis=-1)
@@ -245,6 +236,37 @@ def build_model(input_shape, n_classes):
     model.summary()
     return model
 
+# ----------------- METRICS (MEAN ± STD) ------------------------
+def bootstrap_metrics(y_true, y_pred, n_classes, n_boot=1000, seed=42):
+    """
+    Erro = desvio-padrão via bootstrap nas métricas globais.
+    Retorna dict com mean e std para accuracy, precision_macro, recall_macro e f1_macro.
+    """
+    rng = np.random.default_rng(seed)
+    N = len(y_true)
+    accs, precs, recs, f1s = [], [], [], []
+
+    for _ in range(n_boot):
+        idx = rng.integers(0, N, size=N)  # amostra com reposição
+        yt = y_true[idx]
+        yp = y_pred[idx]
+        accs.append(accuracy_score(yt, yp))
+        precs.append(precision_score(yt, yp, average="macro", zero_division=0))
+        recs.append(recall_score(yt, yp, average="macro", zero_division=0))
+        f1s.append(f1_score(yt, yp, average="macro", zero_division=0))
+
+    to_np = lambda L: np.array(L, dtype=np.float64)
+    accs, precs, recs, f1s = map(to_np, (accs, precs, recs, f1s))
+
+    summary = {
+        "accuracy_mean": float(accs.mean()), "accuracy_std": float(accs.std(ddof=1)),
+        "precision_macro_mean": float(precs.mean()), "precision_macro_std": float(precs.std(ddof=1)),
+        "recall_macro_mean": float(recs.mean()), "recall_macro_std": float(recs.std(ddof=1)),
+        "f1_macro_mean": float(f1s.mean()), "f1_macro_std": float(f1s.std(ddof=1)),
+        "n_bootstrap": int(n_boot)
+    }
+    return summary
+
 # ----------------- PLOTS ------------------------
 def plot_training(history, outdir):
     # loss
@@ -271,56 +293,67 @@ def eval_and_plots(model, X_test, y_test, actions, outdir):
     print("\n=== Classification Report ===")
     print(classification_report(y_true, y_pred, target_names=actions, digits=3))
 
-    # conf mat abs
+    # ---------- Bootstrap: mean ± std ----------
+    boot = bootstrap_metrics(y_true, y_pred, n_classes=len(actions), n_boot=N_BOOTSTRAP, seed=SEED)
+
+    # imprime no formato solicitado: métrica ± erro (erro = desvio-padrão)
+    def pm(mean, std):
+        return f"{mean:.4f} ± {std:.4f}"
+
+    print("\n=== Métricas Globais (macro) com erro = desvio-padrão (bootstrap) ===")
+    print(f"Accuracy        : {pm(boot['accuracy_mean'], boot['accuracy_std'])}")
+    print(f"Precisão (macro): {pm(boot['precision_macro_mean'], boot['precision_macro_std'])}")
+    print(f"Recall   (macro): {pm(boot['recall_macro_mean'], boot['recall_macro_std'])}")
+    print(f"F1       (macro): {pm(boot['f1_macro_mean'], boot['f1_macro_std'])}")
+
+    # salva JSON e CSV com resumo
+    with open(os.path.join(outdir, "metrics_summary.json"), "w", encoding="utf-8") as f:
+        json.dump(boot, f, indent=2, ensure_ascii=False)
+
+    with open(os.path.join(outdir, "metrics_bootstrap.csv"), "w", encoding="utf-8") as f:
+        f.write("metric,mean,std\n")
+        f.write(f"accuracy,{boot['accuracy_mean']:.6f},{boot['accuracy_std']:.6f}\n")
+        f.write(f"precision_macro,{boot['precision_macro_mean']:.6f},{boot['precision_macro_std']:.6f}\n")
+        f.write(f"recall_macro,{boot['recall_macro_mean']:.6f},{boot['recall_macro_std']:.6f}\n")
+        f.write(f"f1_macro,{boot['f1_macro_mean']:.6f},{boot['f1_macro_std']:.6f}\n")
+
+    # ---------- Confusion matrices ----------
     cm = confusion_matrix(y_true, y_pred, labels=range(len(actions)))
     fig, ax = plt.subplots(figsize=(8,6))
     ConfusionMatrixDisplay(cm, display_labels=actions).plot(ax=ax, xticks_rotation=45, colorbar=False)
     ax.set_title("Matriz de confusão (abs)")
     plt.tight_layout(); plt.savefig(os.path.join(outdir, "confusion_abs.png")); plt.close()
 
-    # conf mat norm
     cmn = cm.astype(float) / cm.sum(axis=1, keepdims=True)
     fig, ax = plt.subplots(figsize=(8,6))
     ConfusionMatrixDisplay(cmn, display_labels=actions).plot(ax=ax, xticks_rotation=45, colorbar=False, values_format=".2f")
     ax.set_title("Matriz de confusão (norm)")
     plt.tight_layout(); plt.savefig(os.path.join(outdir, "confusion_norm.png")); plt.close()
-    import seaborn as sns
 
-    # Confusão normalizada - Heatmap
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(
-        cmn, annot=True, fmt=".2f", cmap="Blues",
-        xticklabels=actions, yticklabels=actions,
-        cbar=True
-    )
-    plt.xlabel("Predito")
-    plt.ylabel("Real")
-    plt.title("Matriz de Confusão (Normalizada)")
-    plt.tight_layout()
-    plt.savefig(os.path.join(outdir, "confusion_heatmap.png"))
-    plt.close()
+    # Heatmaps
+    try:
+        import seaborn as sns
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(cmn, annot=True, fmt=".2f", cmap="Blues",
+                    xticklabels=actions, yticklabels=actions, cbar=True)
+        plt.xlabel("Predito"); plt.ylabel("Real"); plt.title("Matriz de Confusão (Normalizada)")
+        plt.tight_layout(); plt.savefig(os.path.join(outdir, "confusion_heatmap.png")); plt.close()
 
-    # Confusão absoluta - Heatmap
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(
-        cm, annot=True, fmt="d", cmap="Reds",
-        xticklabels=actions, yticklabels=actions,
-        cbar=True
-    )
-    plt.xlabel("Predito")
-    plt.ylabel("Real")
-    plt.title("Matriz de Confusão (Absoluta)")
-    plt.tight_layout()
-    plt.savefig(os.path.join(outdir, "confusion_heatmap_abs.png"))
-    plt.close()
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(cm, annot=True, fmt="d", cmap="Reds",
+                    xticklabels=actions, yticklabels=actions, cbar=True)
+        plt.xlabel("Predito"); plt.ylabel("Real"); plt.title("Matriz de Confusão (Absoluta)")
+        plt.tight_layout(); plt.savefig(os.path.join(outdir, "confusion_heatmap_abs.png")); plt.close()
+    except Exception as e:
+        print(f"[WARN] Não foi possível gerar heatmaps via seaborn: {e}")
 
-
-    # PR macro
+    # ---------- PR macro ----------
     Yb = label_binarize(y_true, classes=range(len(actions)))
     ap_macro = average_precision_score(Yb, y_prob, average="macro")
     p, r, _ = precision_recall_curve(Yb.ravel(), y_prob.ravel())
     plt.figure(figsize=(7,5))
-    plt.plot(r, p); plt.title(f"Precision-Recall (AP macro={ap_macro:.3f})")
+    plt.plot(r, p)
+    plt.title(f"Precision-Recall (AP macro={ap_macro:.3f})")
     plt.xlabel("Recall"); plt.ylabel("Precisão"); plt.grid(True); plt.tight_layout()
     plt.savefig(os.path.join(outdir, "pr_macro.png")); plt.close()
 
@@ -345,7 +378,7 @@ def main():
 
     # fixa T = mediana do conjunto (ou T0)
     T_fixed = int(np.median([xi.shape[0] for xi in X_raw]))
-    if T_fixed < 16: T_fixed = max(T0, 16)  # garante janela mínima útil
+    if T_fixed < 16: T_fixed = max(T0, 16)
 
     # aplica feature_mode, pad/crop e calcula stats (NO TREINO)
     X_tmp = []
@@ -353,13 +386,14 @@ def main():
         xi = apply_feature_mode(xi, FEATURE_MODE)
         xi = pad_or_crop_to_T(xi, T_fixed)
         X_tmp.append(xi)
-    X_tmp = np.stack(X_tmp, axis=0).astype(np.float32)  # (N,T,F)
+    X_tmp = np.stack(X_tmp, axis=0).astype(np.float32)
 
     mu = X_tmp.mean(axis=(0,1), keepdims=True)
     sd = X_tmp.std(axis=(0,1), keepdims=True) + 1e-8
 
-    # salva norm_stats.json para inferência ao vivo
-    norm_stats = {"mu": mu.squeeze().tolist(), "sd": sd.squeeze().tolist(), "feature_mode": FEATURE_MODE, "T": T_fixed, "F": int(X_tmp.shape[2])}
+    # salva norm_stats.json
+    norm_stats = {"mu": mu.squeeze().tolist(), "sd": sd.squeeze().tolist(),
+                  "feature_mode": FEATURE_MODE, "T": T_fixed, "F": int(X_tmp.shape[2])}
     with open(os.path.join(RESULTS_DIR, "norm_stats.json"), "w", encoding="utf-8") as f:
         json.dump(norm_stats, f, indent=2)
     print("[OK] norm_stats.json salvo.")
